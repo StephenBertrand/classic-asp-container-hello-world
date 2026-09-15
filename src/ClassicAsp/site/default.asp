@@ -13,7 +13,7 @@ serverTime = Now()
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello World | Classic ASP + Aspire</title>
+    <title>Hello World | Classic ASP + Docker</title>
     <style>
         body { margin: 4rem auto; padding: 0 1.5rem; max-width: 40rem;
                font: 1.125rem/1.6 system-ui, sans-serif; color: #18212b; }
@@ -25,7 +25,7 @@ serverTime = Now()
 </head>
 <body>
     <main>
-        <p class="eyebrow">Classic ASP + IIS + Aspire</p>
+        <p class="eyebrow">Classic ASP + IIS + Docker</p>
         <h1>Hello World</h1>
         <p>This page was rendered by VBScript inside an IIS Windows container.</p>
         <p>Server time: <code id="server-time"><%= Server.HTMLEncode(CStr(serverTime)) %></code></p>
