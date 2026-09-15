@@ -36,13 +36,14 @@ docker info --format '{{.OSType}}'
 
 The first command should report `10.0.x`; the second must report `windows`.
 
-Start the application:
+Build the local image, then start Aspire:
 
 ```powershell
+docker build -t classic-asp-hello:local ./src/ClassicAsp
 dotnet run --project src/AppHost --launch-profile http
 ```
 
-The first run downloads the Windows Server Core/IIS image and enables Classic ASP. The image is several gigabytes, so this initial build may take a while.
+The first Docker build downloads the Windows Server Core/IIS image and enables Classic ASP. The image is several gigabytes, so this initial build may take a while.
 
 Open the dashboard URL printed in the terminal, including its login token if prompted. Wait for the `classic-asp` resource to become healthy, then open its HTTP endpoint:
 
@@ -58,14 +59,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Test-Demo.ps1
 
 This checks the default page, the rendered timestamp, and the exact ASP health response. It exits with an error if a check fails. The execution-policy override applies only to this PowerShell process.
 
-Press **Ctrl+C** in the AppHost terminal to stop the application. After changing ASP files, stop and restart the AppHost so it rebuilds the image. This version copies the site into the image rather than mounting a live source directory.
+Press **Ctrl+C** in the AppHost terminal to stop the application. After changing ASP files, stop the AppHost, repeat the Docker build command, and restart the AppHost. Aspire uses the local image and does not rebuild it. This version copies the site into the image rather than mounting a live source directory.
 
 ## How it fits together
 
 ```text
 Windows PC
   Aspire AppHost
-    builds and starts IIS Windows container
+    starts the prebuilt IIS Windows container
     checks GET /health.asp
 
   Browser -> localhost:8080 -> container port 80 -> IIS -> default.asp
@@ -90,6 +91,12 @@ Windows PC
 - **Local development:** The launch profile uses HTTP to avoid a development certificate prerequisite. Keep the dashboard local. This is a development sample, not an internet deployment configuration.
 
 ## Troubleshooting
+
+**Image missing:** Run `docker build -t classic-asp-hello:local ./src/ClassicAsp` using the same Docker engine/context as Aspire. Image pulling is disabled deliberately because this image is built locally.
+
+**Previous Aspire build failed with exit code 125:** Direct Docker build and execution succeeded on the test PC. The AppHost now uses that local image instead of `AddDockerfile`. This bypasses the failing automatic build path; the underlying cause of that build failure has not yet been established.
+
+**Switching from the direct Docker test:** Stop `classic-asp-test` with `docker stop classic-asp-test` before launching Aspire to free port 8080.
 
 **Docker reports `linux`, or the Windows image cannot be pulled:** Switch Docker Desktop to Windows containers and check again. If that menu option is missing, check the Windows edition and whether Docker was installed with Windows-container support.
 
