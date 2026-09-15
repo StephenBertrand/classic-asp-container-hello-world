@@ -1,6 +1,8 @@
 # Classic ASP with Aspire
 
-A small Classic ASP application running in an IIS Windows container, started and monitored by a C# Aspire AppHost.
+A small Classic ASP application running in an IIS Windows container, with a C# Aspire AppHost intended to build, start, and monitor it.
+
+**Current status:** Direct Docker build and execution have succeeded on the Windows test PC. Aspire startup is blocked by `unknown flag: --progress` during image build. Windows containers are not currently a supported Aspire scenario ([upstream issue](https://github.com/microsoft/aspire/issues/8063)). This repository preserves the standard `AddDockerfile` setup for investigation; it is not yet a working F5 sample.
 
 The page renders **Hello World** and a server timestamp using VBScript. A separate `health.asp` endpoint lets Aspire check that IIS can execute ASP requests.
 
@@ -18,7 +20,9 @@ The AppHost uses Aspire 13.5.3, restored through NuGet. An Aspire workload, the 
 
 You can edit the files and compile the AppHost on macOS, but run Aspire and the Windows container on the Windows PC. Transfer the source folder or clone the repository there; build outputs do not need to be copied.
 
-## Run on Windows
+## Reproduce Aspire startup on Windows
+
+The following is the intended startup flow. It currently fails at image build with the compatibility issue described above. To run the working IIS image directly, see **Run the same image without Aspire** below.
 
 Clone the private repository on your PC using a GitHub account with access:
 
@@ -44,7 +48,7 @@ Alternatively, start the same AppHost from PowerShell:
 dotnet run --project src/AppHost --launch-profile http
 ```
 
-Aspire uses `AddDockerfile` to build the image and start the `classic-asp` container. No separate build command or build resource is needed.
+The AppHost declares the image build and container through `AddDockerfile`, without a separate build resource. The remaining steps describe the expected behavior once the build compatibility issue is resolved.
 
 The first build downloads the Windows Server Core/IIS image and enables Classic ASP. The image is several gigabytes, so this initial build may take a while.
 
@@ -97,7 +101,7 @@ Windows PC
 
 **Image build fails:** Inspect the `classic-asp` resource's console output and the AppHost output. Capture the error lines preceding the exit-code summary. Ensure Docker is running in Windows-container mode and `docker` is available on the IDE process PATH. Restart the IDE after installing Docker.
 
-**Known issue under investigation:** On the test PC, direct Docker build and execution succeeded, but Aspire's `AddDockerfile` build returned exit code 125. The cause is not yet established. This repository retains the standard Aspire build path so the failure can be reproduced and diagnosed; successful F5 startup has not yet been verified.
+**Known Aspire compatibility issue (`unknown flag: --progress`, exit code 125):** Aspire's image-build command supplies a flag that Docker's legacy Windows builder does not accept. [Docker documents](https://docs.docker.com/reference/cli/docker/image/build/) that Windows-container mode uses the legacy builder. This explains why a direct `docker build` succeeds while the Aspire build fails before executing the Dockerfile. Aspire's [Windows-container support request](https://github.com/microsoft/aspire/issues/8063) remains open, and maintainers state that support is not currently planned or prioritized. No supported AppHost setting to remove this build flag has been identified. This repository retains `AddDockerfile` for reproduction; removing the flag alone would not establish full Windows-container compatibility.
 
 **Switching from the direct Docker test:** Stop `classic-asp-test` with `docker stop classic-asp-test` before launching Aspire to free port 8080.
 
