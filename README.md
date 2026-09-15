@@ -44,7 +44,7 @@ Alternatively, start the same AppHost from PowerShell:
 dotnet run --project src/AppHost --launch-profile http
 ```
 
-Aspire first runs `classic-asp-build`, which invokes the direct Docker build command. The IIS container waits for a successful build (exit code 0); a failed build prevents it from starting. Build output is visible in the dashboard.
+Aspire uses `AddDockerfile` to build the image and start the `classic-asp` container. No separate build command or build resource is needed.
 
 The first build downloads the Windows Server Core/IIS image and enables Classic ASP. The image is several gigabytes, so this initial build may take a while.
 
@@ -69,8 +69,7 @@ Press **Ctrl+C** in the AppHost terminal to stop the application. After changing
 ```text
 Windows PC
   Aspire AppHost
-    runs Docker build as classic-asp-build
-    waits for a successful build, then starts the IIS container
+    builds the image and starts the IIS container through AddDockerfile
     checks GET /health.asp
 
   Browser -> localhost:8080 -> container port 80 -> IIS -> default.asp
@@ -96,9 +95,9 @@ Windows PC
 
 ## Troubleshooting
 
-**Build fails or image missing:** Inspect the `classic-asp-build` output in the dashboard. Ensure Docker is running in Windows-container mode and `docker` is available on the IDE process PATH. Restart the IDE after installing Docker. Image pulling is disabled because the startup build produces this image locally.
+**Image build fails:** Inspect the `classic-asp` resource's console output and the AppHost output. Capture the error lines preceding the exit-code summary. Ensure Docker is running in Windows-container mode and `docker` is available on the IDE process PATH. Restart the IDE after installing Docker.
 
-**Previous Aspire build failed with exit code 125:** Direct Docker build and execution succeeded on the test PC. The AppHost now invokes that same direct build command as an executable resource, then waits for completion before starting IIS. This preserves F5 startup while bypassing the failing `AddDockerfile` build path. The underlying cause of the original failure has not yet been established.
+**Known issue under investigation:** On the test PC, direct Docker build and execution succeeded, but Aspire's `AddDockerfile` build returned exit code 125. The cause is not yet established. This repository retains the standard Aspire build path so the failure can be reproduced and diagnosed; successful F5 startup has not yet been verified.
 
 **Switching from the direct Docker test:** Stop `classic-asp-test` with `docker stop classic-asp-test` before launching Aspire to free port 8080.
 
